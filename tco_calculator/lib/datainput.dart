@@ -1,23 +1,19 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:tco_calculator/datainput.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:tco_calculator/infrastructure.dart';
 
-class AuthorizationPage extends StatefulWidget {
+class dataInput extends StatefulWidget {
+  const dataInput({Key? key}) : super(key: key);
+
   @override
-  AuthorizationPageState createState() => AuthorizationPageState();
+  State<dataInput> createState() => _dataInputState();
 }
 
-class AuthorizationPageState extends State<AuthorizationPage> {
-  var isWeb = kIsWeb;
+class _dataInputState extends State<dataInput> {
   final _formKey = GlobalKey<FormState>();
-  final username = TextEditingController();
-  final password = TextEditingController();
-  bool passObscure = true;
+  final name = TextEditingController();
+  final guid = TextEditingController();
+  var isWeb = kIsWeb;
   final ButtonStyle buttonStyle = OutlinedButton.styleFrom(
     primary: Colors.white,
     backgroundColor: Color(0xFF52647E),
@@ -26,58 +22,17 @@ class AuthorizationPageState extends State<AuthorizationPage> {
     ),
   );
 
-  /* Future login() async {
-    var url = Uri.http("192.168.137.1", '/login/pp.php', {'q': '{http}'});
-    var response = await http.post(url, body: {
-      "username": username.text,
-      "password": password.text,
-    });
-    var data = json.decode(response.body);
-    if (data.toString() == "Success") {
-      Fluttertoast.showToast(
-        msg: 'Success',
-        backgroundColor: Colors.green,
-        textColor: Colors.white,
-        toastLength: Toast.LENGTH_SHORT,
-      );
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => dataInput(),
-        ),
-      );
-    } else {
-      Fluttertoast.showToast(
-        msg: 'Error',
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-        toastLength: Toast.LENGTH_SHORT,
-      );
-    }
-  }
-*/
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    username.dispose();
-    password.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Form(
       key: _formKey,
       child: Scaffold(
         appBar: AppBar(
+          backgroundColor: Color(0xFF52647E),
           title: Text(
-            "Авторизация",
+            "Total Cost of Ownership Calculator",
             style: TextStyle(color: Colors.white),
           ),
-          backgroundColor: Color(0xFF52647E),
         ),
         resizeToAvoidBottomInset: false,
         backgroundColor: Color(0xFFD7D7D7),
@@ -86,17 +41,36 @@ class AuthorizationPageState extends State<AuthorizationPage> {
           child: isWeb
               ? Container(
                   height: 300,
-                  width: 300,
-                  padding: EdgeInsets.only(left: 20, right: 20),
+                  width: 400,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      /* Container(
+                  padding: EdgeInsets.only(left: 100, right: 100,top: 10, bottom: 10),
+                  color: Color(0xFF52647E),
+                  child: Text("Введите данные", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+                ),*/
+                      TextFormField(
+                        controller: name,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return '* Необходимо заполнить данное поле';
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Введите название ИС',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
                       SizedBox(
                         height: 10,
                       ),
                       TextFormField(
-                        controller: username,
+                        controller: guid,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return '* Необходимо заполнить данное поле';
@@ -104,42 +78,23 @@ class AuthorizationPageState extends State<AuthorizationPage> {
                           return null;
                         },
                         decoration: InputDecoration(
-                          labelText: 'Имя пользователя',
+                          labelText: 'Введите GUID ИС',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                       ),
                       SizedBox(
-                        height: 16,
+                        height: 10,
                       ),
-                      TextFormField(
-                        controller: password,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return '* Необходимо заполнить данное поле';
-                          }
-                          return null;
-                        },
+                      TextField(
+                        readOnly: true,
                         decoration: InputDecoration(
-                          labelText: 'Пароль',
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              setState(
-                                () {
-                                  passObscure = !passObscure;
-                                },
-                              );
-                            },
-                            icon: Icon(passObscure
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                          ),
+                          labelText: 'Тип расчета',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        obscureText: passObscure,
                       ),
                       SizedBox(
                         height: 20,
@@ -154,18 +109,18 @@ class AuthorizationPageState extends State<AuthorizationPage> {
                             style: buttonStyle,
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => dataInput(),
-                                  ),
+
+                                Navigator.of(context).pushNamed(
+                                  '/infrastructure',
                                 );
 
-                                // login();
-                                print(username.value);
-                                print(password.value);
+                                print(name.value);
+
+
+                                print(guid.value);
                               }
                             },
-                            child: Text("Вход"),
+                            child: Text("Расчет"),
                           )
                         ],
                       ),
@@ -175,14 +130,34 @@ class AuthorizationPageState extends State<AuthorizationPage> {
               : Container(
                   padding: EdgeInsets.only(left: 20, right: 20),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      /* Container(
+                  padding: EdgeInsets.only(left: 100, right: 100,top: 10, bottom: 10),
+                  color: Color(0xFF52647E),
+                  child: Text("Введите данные", style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+                ),*/
+                      TextFormField(
+                        controller: name,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return '* Необходимо заполнить данное поле';
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Введите название ИС',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
                       SizedBox(
                         height: 10,
                       ),
                       TextFormField(
-                        controller: username,
+                        controller: guid,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return '* Необходимо заполнить данное поле';
@@ -190,42 +165,23 @@ class AuthorizationPageState extends State<AuthorizationPage> {
                           return null;
                         },
                         decoration: InputDecoration(
-                          labelText: 'Имя пользователя',
+                          labelText: 'Введите GUID ИС',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                       ),
                       SizedBox(
-                        height: 16,
+                        height: 10,
                       ),
-                      TextFormField(
-                        controller: password,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return '* Необходимо заполнить данное поле';
-                          }
-                          return null;
-                        },
+                      TextField(
+                        readOnly: true,
                         decoration: InputDecoration(
-                          labelText: 'Пароль',
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              setState(
-                                () {
-                                  passObscure = !passObscure;
-                                },
-                              );
-                            },
-                            icon: Icon(passObscure
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                          ),
+                          labelText: 'Тип расчета',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        obscureText: passObscure,
                       ),
                       SizedBox(
                         height: 20,
@@ -240,16 +196,13 @@ class AuthorizationPageState extends State<AuthorizationPage> {
                             style: buttonStyle,
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
-                                Navigator.of(context).pushNamed(
-                                  '/datainput',
-                                );
 
-                                // login();
-                                print(username.value);
-                                print(password.value);
                               }
+
+                                print(name.value);
+                                print(guid.value);
                             },
-                            child: Text("Вход"),
+                            child: Text("Расчет"),
                           )
                         ],
                       ),
