@@ -1,11 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:tco_calculator/datainput.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/foundation.dart';
-import 'package:tco_calculator/infrastructure.dart';
+import 'package:dio/dio.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
 
 class AuthorizationPage extends StatefulWidget {
   @override
@@ -25,36 +23,71 @@ class AuthorizationPageState extends State<AuthorizationPage> {
       color: Color(0xFF52647E),
     ),
   );
+  var token;
+  final myBox = Hive.box('token_box');
 
-  /* Future login() async {
-    var url = Uri.http("192.168.137.1", '/login/pp.php', {'q': '{http}'});
-    var response = await http.post(url, body: {
-      "username": username.text,
-      "password": password.text,
+  Future<String> loginApis(String user, String password) async {
+    //var apiURL = 'http://37.145.168.238/api/login';
+    var apiURL = 'http://localhost/api/login';
+
+    var formData = FormData.fromMap({
+      'login': user,
+      'password': password,
     });
-    var data = json.decode(response.body);
-    if (data.toString() == "Success") {
-      Fluttertoast.showToast(
-        msg: 'Success',
-        backgroundColor: Colors.green,
-        textColor: Colors.white,
-        toastLength: Toast.LENGTH_SHORT,
+    Dio dio = Dio();
+    Response response;
+    try {
+      response = await dio.post(
+        apiURL,
+        data: formData,
       );
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => dataInput(),
+      print("response data " + response.toString());
+      if (response.data['token'] != null) {
+        token = response.data['token'];
+        saveToken(token);
+        HeaderAuth(token);
+      }
+    } catch (e) {
+      Fluttertoast.showToast(
+          msg: "Направильный логин или пароль", webBgColor: "#D7503C", webPosition: "center", timeInSecForIosWeb: 2 );
+      return 'something wrong';
+    }
+    return '';
+  }
+  //
+  Future<String> HeaderAuth(var token) async {
+    //var apiURL = 'http://37.145.168.238/api/user';
+    var apiURL = 'http://localhost/api/user';
+
+    Dio dio = Dio();
+
+    Response response;
+    try {
+      response = await dio.get(
+        apiURL,
+        options: Options(
+          headers: {"Authorization": "Bearer $token"},
         ),
       );
-    } else {
+    if(response.statusCode == 200){
+      Navigator.pushReplacementNamed(context, '/datainput');
       Fluttertoast.showToast(
-        msg: 'Error',
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-        toastLength: Toast.LENGTH_SHORT,
-      );
+          msg: "Успешная авторизация", webPosition: "center", timeInSecForIosWeb: 2);
+    }else{
+      Fluttertoast.showToast(
+          msg: response.statusMessage.toString(), backgroundColor: Colors.cyan);
     }
+      print(response.headers);
+
+    } catch (e) {
+
+      return 'something wrong';
+    }
+    return '';
   }
-*/
+
+
+
   @override
   void initState() {
     super.initState();
@@ -66,6 +99,11 @@ class AuthorizationPageState extends State<AuthorizationPage> {
     username.dispose();
     password.dispose();
   }
+
+  Future saveToken(String tmp) async{
+    await myBox.put('token', tmp);
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -152,15 +190,11 @@ class AuthorizationPageState extends State<AuthorizationPage> {
                           ),
                           OutlinedButton(
                             style: buttonStyle,
-                            onPressed: () {
+                            onPressed: () async {
                               if (_formKey.currentState!.validate()) {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => dataInput(),
-                                  ),
-                                );
+                                loginApis(username.text, password.text);
 
-                                // login();
+                                // Navigator.of(context).pushReplacementNamed('/datainput');
                                 print(username.value);
                                 print(password.value);
                               }
@@ -172,90 +206,7 @@ class AuthorizationPageState extends State<AuthorizationPage> {
                     ],
                   ),
                 )
-              : Container(
-                  padding: EdgeInsets.only(left: 20, right: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        height: 10,
-                      ),
-                      TextFormField(
-                        controller: username,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return '* Необходимо заполнить данное поле';
-                          }
-                          return null;
-                        },
-                        decoration: InputDecoration(
-                          labelText: 'Имя пользователя',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        height: 16,
-                      ),
-                      TextFormField(
-                        controller: password,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return '* Необходимо заполнить данное поле';
-                          }
-                          return null;
-                        },
-                        decoration: InputDecoration(
-                          labelText: 'Пароль',
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              setState(
-                                () {
-                                  passObscure = !passObscure;
-                                },
-                              );
-                            },
-                            icon: Icon(passObscure
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        obscureText: passObscure,
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          SizedBox(
-                            width: 20,
-                          ),
-                          OutlinedButton(
-                            style: buttonStyle,
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                Navigator.of(context).pushNamed(
-                                  '/datainput',
-                                );
-
-                                // login();
-                                print(username.value);
-                                print(password.value);
-                              }
-                            },
-                            child: Text("Вход"),
-                          )
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+              : Container(),
         ),
       ),
     );
